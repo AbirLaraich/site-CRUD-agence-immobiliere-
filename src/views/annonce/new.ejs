@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer une annonce</title>
+  <link rel="stylesheet" href="/css/formAnnonce.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Créer une annonce</h1>
+    <form id="annonceForm" action="/annonce/api" method="POST" enctype="multipart/form-data" class="form-container">
+      <label for="titre">Titre :</label>
+      <input type="text" id="titre" name="titre" required />
+
+      <label for="description">Description :</label>
+      <textarea id="description" name="description" required></textarea>
+
+      <label for="prix">Prix :</label>
+      <input type="number" id="prix" name="prix" required />
+
+      <label for="dateDisponibilite">Date de disponibilité :</label>
+      <input type="date" id="dateDisponibilite" name="dateDisponibilite" required />
+
+      <label for="typeBien">Type de bien :</label>
+      <select id="typeBien" name="typeBien" required>
+        <option value="vente">Vente</option>
+        <option value="location">Location</option>
+      </select>
+
+      <label for="statutPublication">Statut de publication :</label>
+      <select id="statutPublication" name="statutPublication" required>
+        <option value="publiée">Publiée</option>
+        <option value="non publiée">Non publiée</option>
+      </select>
+
+      <label for="statutBien">Statut du bien :</label>
+      <select id="statutBien" name="statutBien" required>
+        <option value="disponible">Disponible</option>
+        <option value="loué">Loué</option>
+        <option value="vendu">Vendu</option>
+      </select>
+
+      <label for="photos">Photos :</label>
+      <div id="dropzone" class="dropzone">
+        <p>Glissez et déposez vos fichiers ici, ou cliquez pour les sélectionner</p>
+        <input type="file" id="photos" name="photos" multiple accept="image/*" />
+      </div>
+
+      <div class="image-preview" id="imagePreview"></div>
+
+      <input type="submit" value="Créer" class="btn" />
+    </form>
+    <a href="/annonce" class="btn btn-secondary">Annuler</a>
+  </div>
+
+  <script src="/js/dragAndDrop.js"></script>
+  <script>
+    const fileInput = document.getElementById('photos');
+    const imagePreview = document.getElementById('imagePreview');
+
+    fileInput.addEventListener('change', function() {
+      imagePreview.innerHTML = '';
+      const files = Array.from(fileInput.files);
+
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          imagePreview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Annonces - Agence Immobilière</title>
+    <link rel="stylesheet" href="/css/annonce.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <h1>Agence Immobilière</h1>
+            <div class="auth-links">
+                <% if (user) { %>
+                    <span class="welcome-message">Bienvenue, <%= user.name %>!</span>
+                    <a href="/auth/logout" class="btn">Déconnexion</a>
+                <% } else { %>
+                    <a href="/auth/signin" class="btn">Connexion</a>
+                <% } %>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Liste des Annonces</h1>
+        <% if (user && user.role === 'agent_immobilier') { %>
+            <a href="/annonce/new" class="btn create-btn">Créer une Nouvelle Annonce</a>
+        <% } %>
+        <div class="annonces-list">
+            <% annonces.forEach(annonce => { %>
+                <article class="annonce-item">
+                    <div class="annonce-content">
+                        <h3 class="annonce-title"><%= annonce.titre %></h3>
+                        <div class="annonce-photos">
+                            <% if (annonce.photos && annonce.photos.length > 0) { %>
+                                <% annonce.photos.forEach(photo => { %>
+                                    <figure class="photo-item">
+                                        <img src="/<%= photo.url %>" alt="Photo de l'annonce" class="annonce-photo" />
+                                    </figure>
+                                <% }) %>
+                            <% } else { %>
+                                <p>Aucune photo disponible</p>
+                            <% } %>
+                        </div>
+                        <p class="description"></p>
+                        <p class="price"><strong>Prix:</strong> <%= annonce.prix %> €</p>
+                        <p class="type-bien"><strong>Type de Bien:</strong> <%= annonce.typeBien %></p>
+                        <p class="statut-bien"><strong>Statut:</strong> <%= annonce.statutBien %></p>
+                        <p class="statut-bien"><strong>Description:</strong> <%= annonce.description %></p> <br/> 
+                    </div>
+
+                    <div class="annonce-actions">
+                        <% if (user && user.role === 'agent_immobilier') { %>
+                            <div class="button-container">
+                                <a href="/annonce/edit/<%= annonce._id %>" class="btn btn-edit"><i class="fas fa-edit"></i> Modifier</a>
+                                <form action="/annonce/api/<%= annonce._id %>?_method=DELETE" method="POST" class="delete-form">
+                                    <button type="button" class="btn btn-danger" onclick="confirmDeletion('<%= annonce._id %>')">Supprimer</button>
+                                </form>
+                            </div>
+                        <% } %>
+
+                        <% if (user && user.role === 'client') { %>
+                            <div class="question-section">
+                                <h4>Poser une Question</h4>
+                                <form action="/annonce/<%= annonce._id %>/poser-question" method="POST">
+                                    <textarea name="question" placeholder="Votre question ici..." required></textarea>
+                                    <button type="submit" class="btn">Envoyer</button>
+                                </form>
+                                <h5>Questions Posées :</h5>
+                                <div class="questions-list">
+                                    <% if (annonce.questionsPosees && annonce.questionsPosees.length > 0) { %>
+                                        <ul>
+                                            <% annonce.questionsPosees.forEach(q => { %>
+                                                <li class="question-item">
+                                                    <strong>Question:</strong> <%= q.question %>
+                                                    <div class="answer-section">
+                                                        <% if (q.reponse) { %>
+                                                            <strong>Réponse:</strong> <%= q.reponse %>
+                                                        <% } else { %>
+                                                            <em>En attente de réponse</em>
+                                                        <% } %>
+                                                    </div>
+                                                </li>
+                                            <% }) %>
+                                        </ul>
+                                    <% } else { %>
+                                        <p>Aucune question posée pour cette annonce.</p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <% if (user && user.role === 'agent_immobilier') { %>
+                            <div class="response-section">
+                                <h4>Répondre aux Questions</h4>
+                                <div class="questions-list">
+                                    <% if (annonce.questionsPosees && annonce.questionsPosees.length > 0) { %>
+                                        <ul>
+                                            <% annonce.questionsPosees.forEach(q => { %>
+                                                <li class="question-item">
+                                                    <strong>Question:</strong> <%= q.question %>
+                                                    <% if (!q.reponse) { %>
+                                                        <form action="/annonce/<%= annonce._id %>/questions/<%= q._id %>/repondre" method="POST">
+                                                            <textarea name="reponse" placeholder="Votre réponse ici..." required></textarea>
+                                                            <button type="submit" class="btn">Répondre</button>
+                                                        </form>
+                                                    <% } else { %>
+                                                        <div class="answer-section">
+                                                            <strong>Réponse:</strong> <%= q.reponse %>
+                                                        </div>
+                                                    <% } %>
+                                                </li>
+                                            <% }) %>
+                                        </ul>
+                                    <% } else { %>
+                                        <p>Aucune question posée pour cette annonce.</p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </article>
+            <% }) %>
+        </div>
+    </main>
+
+    <script>
+        function confirmDeletion(annonceId) {
+            if (confirm("Êtes-vous sûr de vouloir supprimer cette annonce ?")) {
+                fetch(`/annonce/api/${annonceId}`, { method: "DELETE" })
+                    .then(response => {
+                        if (response.ok) {
+                            alert("Annonce supprimée avec succès.");
+                            window.location.reload(); 
+                        } else {
+                            alert("Une erreur est survenue lors de la suppression.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erreur lors de la suppression:", error);
+                        alert("Une erreur est survenue lors de la suppression.");
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
